@@ -3,6 +3,8 @@ import { GoogleGenAI, Modality } from '@google/genai';
 import { verifyUser } from './utils/auth.js';
 import { db } from './utils/db.js';
 
+const QUICK_EDIT_COST = 1;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -15,18 +17,18 @@ export default async function handler(req, res) {
     if (user.status !== 'approved') {
       return res.status(403).json({ message: `Your account status is: ${user.status}. Access denied.` });
     }
-    if (user.credits <= 0) {
-      return res.status(402).json({ message: 'Insufficient credits.' });
+    if (user.credits < QUICK_EDIT_COST) {
+      return res.status(402).json({ message: `Insufficient credits. This action requires ${QUICK_EDIT_COST} credit(s).` });
     }
   } catch (error) {
     return res.status(401).json({ message: error.message || 'Authentication failed.' });
   }
 
   try {
-    const { image, prompt } = req.body;
+    const { images, prompt } = req.body;
 
-    if (!image?.base64 || !image?.mimeType || !prompt) {
-      return res.status(400).json({ message: 'Missing required image or prompt data.' });
+    if (!images || !Array.isArray(images) || images.length === 0 || !prompt) {
+      return res.status(400).json({ message: 'Missing required images or prompt data.' });
     }
     
     const apiKey = process.env.API_KEY;
@@ -34,14 +36,18 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: "Server configuration error: API key not found." });
     }
     const ai = new GoogleGenAI({ apiKey });
+    
+    const contentParts = [
+      { text: prompt },
+      ...images.map(image => ({
+        inlineData: { data: image.base64, mimeType: image.mimeType }
+      }))
+    ];
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image-preview',
       contents: { 
-        parts: [
-          { inlineData: { data: image.base64, mimeType: image.mimeType } },
-          { text: prompt }
-        ] 
+        parts: contentParts
       },
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
@@ -51,7 +57,7 @@ export default async function handler(req, res) {
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
 
     if (generatedImagePart) {
-      await db.updateUser(user.id, { credits: user.credits - 1 });
+      await db.updateUser(user.id, { credits: user.credits - QUICK_EDIT_COST });
       res.status(200).json(generatedImagePart.inlineData);
     } else {
       const textPart = response.candidates?.[0]?.content?.parts?.find(p => p.text);
