@@ -124,7 +124,6 @@ const translations = {
     }
 };
 
-// FIX: Provided a default value to createContext to prevent type errors and runtime issues.
 const LanguageContext = createContext({
     t: (key) => key,
     language: 'vi',
@@ -149,7 +148,6 @@ const LanguageProvider = ({ children }) => {
     );
 };
 
-// FIX: Provided a default value to createContext to prevent type errors and runtime issues.
 const ThemeContext = createContext({
     theme: 'light',
     toggleTheme: () => {},
@@ -393,7 +391,11 @@ const AdminPage = () => {
             }
             const data = await res.json();
             setUsers(data.users);
-        } catch (err) { setError(err.message); } finally { setLoading(false); }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -402,51 +404,60 @@ const AdminPage = () => {
     
     const handleUpdateUser = async (userId, updates) => {
         try {
-            const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, ...updates }) });
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, ...updates }),
+            });
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.message || 'Failed to update user');
             }
-            fetchUsers(); 
-        } catch (err) { alert(`Error: ${err.message}`); }
+            fetchUsers();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
     };
 
     const handleCreditsChange = (userId, newCreditsStr) => {
         const newCredits = parseInt(newCreditsStr, 10);
-        if (isNaN(newCredits) || newCredits < 0) return;
-        setUsers(users.map(u => u.id === userId ? { ...u, credits: newCredits } : u));
+        if (isNaN(newCredits)) return;
+        const updatedUsers = users.map(u => u.id === userId ? { ...u, credits: newCredits } : u);
+        setUsers(updatedUsers);
     };
     
     const handleCreditsBlur = (userId, currentCredits) => {
         const originalUser = users.find(u => u.id === userId);
-         // This check is a bit tricky due to local state, so we always update on blur
-         handleUpdateUser(userId, { credits: currentCredits });
+         if (originalUser && originalUser.credits !== currentCredits) {
+             handleUpdateUser(userId, { credits: currentCredits });
+        }
     };
 
-    if (loading) return <div className="text-center p-10 dark:text-slate-300">Loading users...</div>
+
+    if (loading) return <div className="text-center p-10">Loading users...</div>
     if (error) return <div className="text-center p-10 text-red-500">Error: {error}</div>
 
     return (
-        <div className="p-4 sm:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
+        <div className="p-4 sm:p-8 bg-slate-50 dark:bg-slate-800 min-h-screen">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{t('adminDashboard')}</h1>
-                <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; }} className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                 <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{t('adminDashboard')}</h1>
+                 <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = '';}} className="px-4 py-2 bg-yellow-400 text-slate-900 rounded-lg hover:bg-yellow-500 font-semibold transition-colors">
                     {t('backToDashboard')}
                 </a>
             </div>
-            <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg overflow-x-auto">
+            <div className="bg-white dark:bg-slate-900 shadow-md rounded-lg overflow-x-auto">
                 <table className="min-w-full leading-normal">
                     <thead>
                         <tr>
-                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('userHeader')}</th>
-                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('statusHeader')}</th>
-                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('creditsHeader')}</th>
-                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t('actionsHeader')}</th>
+                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{t('userHeader')}</th>
+                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{t('statusHeader')}</th>
+                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{t('creditsHeader')}</th>
+                            <th className="px-5 py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{t('actionsHeader')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {users.map(u => (
-                            <tr key={u.id} className="dark:odd:bg-slate-800 dark:even:bg-slate-700/50">
+                            <tr key={u.id}>
                                 <td className="px-5 py-5 border-b border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-200">{u.email}</td>
                                 <td className="px-5 py-5 border-b border-slate-200 dark:border-slate-700 text-sm">
                                     <span className={`px-2 py-1 font-semibold leading-tight rounded-full text-xs ${
@@ -458,7 +469,12 @@ const AdminPage = () => {
                                     </span>
                                 </td>
                                 <td className="px-5 py-5 border-b border-slate-200 dark:border-slate-700 text-sm">
-                                    <input type="number" value={u.credits} onChange={(e) => handleCreditsChange(u.id, e.target.value)} onBlur={() => handleCreditsBlur(u.id, u.credits)} className="w-24 p-1 rounded bg-slate-200 dark:bg-slate-600 text-center"/>
+                                    <input 
+                                      type="number" 
+                                      defaultValue={u.credits}
+                                      onBlur={(e) => handleCreditsBlur(u.id, parseInt(e.target.value, 10))}
+                                      className="w-24 p-1 rounded bg-slate-200 dark:bg-slate-700 text-center"
+                                    />
                                 </td>
                                 <td className="px-5 py-5 border-b border-slate-200 dark:border-slate-700 text-sm space-x-3">
                                     {u.status === 'pending' && (
@@ -482,14 +498,14 @@ const AdminPage = () => {
 const DashboardPage = () => {
     const { t } = useLanguage();
     const { refreshUser } = useAuth();
-    const [activeTab, setActiveTab] = useState('simple');
+    const [activeTab, setActiveTab] = useState('pro');
 
     const handleGenerationComplete = () => {
-        refreshUser(); 
+        refreshUser();
     };
     
-    // FIX: Added default null values to optional props to prevent missing prop errors.
-    const ImageBox = ({ imageData = null, onFileChange = null, onRemove = null, title = null, children = null, isResultBox = false, index = null }) => {
+    // FIX: Make title prop optional by adding a default value.
+    const ImageBox = ({ imageData, onFileChange = null, title = null, children = null, isResultBox = false, onClear = null, index = 0 }) => {
         const fileInputRef = useRef(null);
         const onButtonClick = () => fileInputRef.current?.click();
 
@@ -497,7 +513,7 @@ const DashboardPage = () => {
         const handleDrop = (e) => {
             e.preventDefault();
             if (e.dataTransfer.files && e.dataTransfer.files[0] && onFileChange) {
-                onFileChange(e.dataTransfer.files[0]);
+                onFileChange(e.dataTransfer.files[0], index);
             }
         };
 
@@ -517,20 +533,20 @@ const DashboardPage = () => {
                 <div 
                     onDragOver={onFileChange ? handleDragOver : undefined}
                     onDrop={onFileChange ? handleDrop : undefined}
-                    className={`relative aspect-square w-full rounded-xl flex flex-col justify-center items-center p-4 text-center border-2 border-dashed ${imageData ? 'border-transparent' : 'border-slate-300 dark:border-slate-600'} bg-slate-100 dark:bg-slate-800 transition-all`}>
+                    className={`relative aspect-square w-full rounded-xl flex flex-col justify-center items-center p-4 text-center border-2 border-dashed ${imageData ? 'border-transparent' : 'border-slate-300 dark:border-slate-600'} bg-slate-100 dark:bg-slate-800/50 transition-all group`}>
                     
                     {imageData ? (
                         <>
                             <img src={imageData} alt="Content" className="w-full h-full object-contain rounded-lg"/>
                             {isResultBox && (
-                                <button onClick={handleDownload} className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/50 text-white hover:bg-slate-900/80 transition-colors">
+                                <button onClick={handleDownload} title="Download Image" className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/50 text-white hover:bg-slate-900/80 transition-colors">
                                     <DownloadIcon />
                                 </button>
                             )}
-                            {onRemove && (
-                                 <button onClick={() => onRemove(index)} className="absolute top-3 right-3 p-2 rounded-full bg-red-600/70 text-white hover:bg-red-600/90 transition-colors">
-                                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                 </button>
+                            {onClear && (
+                                <button onClick={() => onClear(index)} title="Remove Image" className="absolute top-3 right-3 p-2 rounded-full bg-red-600/70 text-white hover:bg-red-600/90 transition-colors opacity-0 group-hover:opacity-100">
+                                   <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
                             )}
                         </>
                     ) : (
@@ -542,7 +558,7 @@ const DashboardPage = () => {
                                     </div>
                                     <p className="font-semibold">Click to upload or drag & drop</p>
                                     <p className="text-xs">PNG, JPG, or WEBP</p>
-                                    <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && onFileChange(e.target.files[0])} className="hidden" accept="image/png, image/jpeg, image/webp"/>
+                                    <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && onFileChange(e.target.files[0], index)} className="hidden" accept="image/png, image/jpeg, image/webp"/>
                                     <button onClick={onButtonClick} className="absolute inset-0 cursor-pointer"></button>
                                 </>
                             ) : (
@@ -556,27 +572,29 @@ const DashboardPage = () => {
     };
 
     const SimpleImageEditor = () => {
-        const [images, setImages] = useState([]);
+        const [images, setImages] = useState([null, null, null]);
         const [prompt, setPrompt] = useState('');
         const [generatedImage, setGeneratedImage] = useState(null);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState('');
     
-        const handleFileChange = async (file) => {
-            if (images.length >= 3) {
-                setError("You can upload a maximum of 3 images.");
-                return;
-            }
+        const handleFileChange = async (file, index) => {
             try {
                 const imageData = await readFileAsBase64(file);
+                // FIX: Add a check to ensure imageData is an object before spreading.
                 if (imageData && typeof imageData === 'object') {
-                    setImages(prev => [...prev, { ...imageData, dataUrl: URL.createObjectURL(file) }]);
+                    const newImages = [...images];
+                    newImages[index] = { ...imageData, dataUrl: URL.createObjectURL(file) };
+                    setImages(newImages);
+                    setGeneratedImage(null);
                 }
             } catch (err) { setError("Failed to read image."); console.error(err); }
         };
-        
-        const removeImage = (indexToRemove) => {
-            setImages(prev => prev.filter((_, index) => index !== indexToRemove));
+
+        const handleClearImage = (index) => {
+            const newImages = [...images];
+            newImages[index] = null;
+            setImages(newImages);
         };
     
         const optimizePrompt = async () => {
@@ -586,12 +604,12 @@ const DashboardPage = () => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message);
                 setPrompt(data.optimizedPrompt);
-                handleGenerationComplete(); // Also costs credits
             } catch (err) { console.error("Optimization failed:", err); }
         };
     
         const generateImage = async () => {
-            if (images.length === 0 || !prompt) {
+            const uploadedImages = images.filter(img => img !== null).map(img => ({ base64: img.base64, mimeType: img.mimeType }));
+            if (uploadedImages.length === 0 || !prompt) {
                 setError('Please upload at least one image and provide a description.');
                 return;
             }
@@ -599,8 +617,7 @@ const DashboardPage = () => {
             setError('');
             setGeneratedImage(null);
             try {
-                const imagePayload = images.map(img => ({ base64: img.base64, mimeType: img.mimeType }));
-                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images: imagePayload, prompt }) });
+                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images: uploadedImages, prompt }) });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message);
                 setGeneratedImage(`data:${data.mimeType};base64,${data.data}`);
@@ -609,33 +626,30 @@ const DashboardPage = () => {
         };
     
         return (
-            <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg">
+            <div className="max-w-6xl mx-auto p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                     <div>
+                    <div>
                         <h3 className="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">{t('uploadImagesTitle')}</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                             {images.map((img, index) => (
-                                <ImageBox key={index} imageData={img.dataUrl} onRemove={removeImage} index={index} />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {images.map((image, index) => (
+                                <ImageBox key={index} index={index} imageData={image?.dataUrl} onFileChange={handleFileChange} onClear={handleClearImage} />
                             ))}
-                            {images.length < 3 && (
-                                <ImageBox onFileChange={handleFileChange} />
-                            )}
                         </div>
                     </div>
-                    <ImageBox title={t('aiResultTitle')} imageData={generatedImage} isResultBox={true}>{t('aiResultTitle')}</ImageBox>
+                    <ImageBox title={t('aiResultTitle')} imageData={generatedImage} isResultBox={true}>Your edited image will appear here</ImageBox>
                 </div>
                 <div className="mt-6">
                     <label htmlFor="edit-prompt" className="block text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">{t('describeEditTitle')}</label>
                     <div className="relative">
-                        <textarea id="edit-prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'Add a futuristic flying car and neon lights along the road'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
-                        <button onClick={optimizePrompt} title="Optimize Prompt" className="absolute top-2 right-2 p-1.5 text-slate-500 dark:text-slate-400 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                        <textarea id="edit-prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'Combine the two people into one photo, on a beach background'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
+                        <button onClick={optimizePrompt} title="Optimize Prompt" className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                             <MagicWandIcon className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 <div className="mt-6">
-                    <button onClick={generateImage} disabled={isLoading || images.length === 0 || !prompt} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-lg flex items-center justify-center">
+                    <button onClick={generateImage} disabled={isLoading || images.every(i => i === null) || !prompt} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors text-lg flex items-center justify-center">
                         {isLoading ? t('generating') : t('generateImageButton')}
                     </button>
                 </div>
@@ -644,6 +658,7 @@ const DashboardPage = () => {
     };
 
     const ProfessionalAdGenerator = () => {
+        // ... (this component remains largely the same, just adding translations and dark mode classes)
         const [productImage, setProductImage] = useState(null);
         const [modelImage, setModelImage] = useState(null);
         const [generatedImage, setGeneratedImage] = useState(null);
@@ -672,7 +687,6 @@ const DashboardPage = () => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message);
                 setCustomPrompt(data.optimizedPrompt);
-                 handleGenerationComplete(); // Also costs credits
             } catch (err) { console.error("Optimization failed:", err); }
         };
 
@@ -701,7 +715,7 @@ const DashboardPage = () => {
         const OptionSelect = ({ label, value, onChange, children }) => (
             <div>
                 <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{label}</label>
-                <select value={value} onChange={onChange} className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition">
+                <select value={value} onChange={onChange} className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition">
                     {children}
                 </select>
             </div>
@@ -709,16 +723,16 @@ const DashboardPage = () => {
 
         return (
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg space-y-8">
+                <div className="lg:col-span-2 p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg space-y-8">
                     <div>
-                        <h2 className="text-xl font-bold mb-4 dark:text-slate-200">{t('inputImagesTitle')}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('inputImagesTitle')}</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <ImageBox title={t('productImage')} imageData={productImage?.dataUrl} onFileChange={(f) => handleFileChange(f, 'product')} />
                             <ImageBox title={t('modelImage')} imageData={modelImage?.dataUrl} onFileChange={(f) => handleFileChange(f, 'model')} />
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold mb-4 dark:text-slate-200">{t('proOptionsTitle')}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('proOptionsTitle')}</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <OptionSelect label={t('industry')} value={options.industry} onChange={(e) => handleOptionChange('industry', e.target.value)}>
                                 <option value="Auto">Auto</option><option value="Cosmetics">Cosmetics</option><option value="Beverage">Beverage</option><option value="Food">Food</option><option value="Technology">Technology</option><option value="Accessory">Accessory</option><option value="Other">Other</option>
@@ -741,20 +755,20 @@ const DashboardPage = () => {
                         </div>
                     </div>
                      <div>
-                        <label htmlFor="custom-prompt" className="block text-lg font-semibold mb-2 dark:text-slate-200">{t('creativeRequest')}</label>
+                        <label htmlFor="custom-prompt" className="block text-lg font-semibold mb-2">{t('creativeRequest')}</label>
                          <div className="relative">
-                            <textarea id="custom-prompt" rows={2} value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} placeholder="e.g., 'with water splashes and a sense of freshness'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
-                            <button onClick={optimizeAdPrompt} title="Optimize Prompt" className="absolute top-2 right-2 p-1.5 text-slate-500 dark:text-slate-400 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                            <textarea id="custom-prompt" rows={2} value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} placeholder="e.g., 'with water splashes and a sense of freshness'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
+                            <button onClick={optimizeAdPrompt} title="Optimize Prompt" className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                                 <MagicWandIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
                 </div>
-                <div className="p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg flex flex-col">
+                <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg flex flex-col">
                      <ImageBox title={t('result')} imageData={generatedImage} isResultBox={true} />
                      {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                      <div className="mt-6 flex-grow flex flex-col justify-end">
-                        <button onClick={generateAdImage} disabled={isLoading || !productImage} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-lg">
+                        <button onClick={generateAdImage} disabled={isLoading || !productImage} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors text-lg">
                             {isLoading ? t('generating') : t('generatePhotoButton')}
                         </button>
                     </div>
@@ -764,6 +778,7 @@ const DashboardPage = () => {
     };
 
     const VideoGenerator = () => {
+        // ... (this component remains largely the same, just adding translations and dark mode classes)
         const [image, setImage] = useState(null);
         const [prompt, setPrompt] = useState('');
         const [videoUrl, setVideoUrl] = useState(null);
@@ -780,7 +795,7 @@ const DashboardPage = () => {
         };
 
         useEffect(() => {
-            return () => stopPolling(); 
+            return () => stopPolling();
         }, []);
 
         const handleFileChange = async (file) => {
@@ -799,7 +814,6 @@ const DashboardPage = () => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message);
                 setPrompt(data.optimizedPrompt);
-                 handleGenerationComplete(); // Also costs credits
             } catch (err) { console.error("Optimization failed:", err); }
         };
 
@@ -829,8 +843,9 @@ const DashboardPage = () => {
                     setError(`Polling error: ${err.message}`);
                     setIsLoading(false);
                     stopPolling();
+                    refreshUser(); // Refresh user to reflect potential credit refund
                 }
-            }, 10000); 
+            }, 10000);
         };
 
         const generateVideo = async () => {
@@ -854,30 +869,31 @@ const DashboardPage = () => {
             } catch (err) {
                 setError(err.message);
                 setIsLoading(false);
+                refreshUser(); // Refresh user to reflect potential credit refund
             }
         };
 
         return (
             <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg space-y-6">
+                <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg space-y-6">
                     <ImageBox title={t('inputImageOptional')} imageData={image?.dataUrl} onFileChange={handleFileChange} />
                     <div>
-                        <label htmlFor="video-prompt" className="block text-lg font-semibold mb-2 dark:text-slate-200">{t('describeVideo')}</label>
+                        <label htmlFor="video-prompt" className="block text-lg font-semibold mb-2">{t('describeVideo')}</label>
                         <div className="relative">
-                            <textarea id="video-prompt" rows={4} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'A neon hologram of a cat driving at top speed'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
-                            <button onClick={optimizePrompt} title="Optimize Prompt to English" className="absolute top-2 right-2 p-1.5 text-slate-500 dark:text-slate-400 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                            <textarea id="video-prompt" rows={4} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'A neon hologram of a cat driving at top speed'" className="w-full p-3 pr-10 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition"></textarea>
+                            <button onClick={optimizePrompt} title="Optimize Prompt to English" className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-yellow-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                                 <MagicWandIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
-                     <button onClick={generateVideo} disabled={isLoading || !prompt} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-lg">
+                     <button onClick={generateVideo} disabled={isLoading || !prompt} className="w-full py-3 px-6 bg-yellow-400 text-slate-900 font-bold rounded-lg hover:bg-yellow-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors text-lg">
                         {isLoading ? t('processing') : t('generateVideoButton')}
                     </button>
                 </div>
-                 <div className="p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-lg flex flex-col justify-center items-center">
+                 <div className="p-4 sm:p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg flex flex-col justify-center items-center">
                     <div className="w-full">
-                         <h3 className="text-lg font-semibold mb-2 text-center dark:text-slate-200">{t('videoResult')}</h3>
-                         <div className="relative aspect-video w-full rounded-xl flex flex-col justify-center items-center text-center border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700">
+                         <h3 className="text-lg font-semibold mb-2 text-center">{t('videoResult')}</h3>
+                         <div className="relative aspect-video w-full rounded-xl flex flex-col justify-center items-center text-center border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50">
                              {videoUrl ? (
                                 <video src={videoUrl} controls autoPlay className="w-full h-full rounded-lg" />
                              ) : (
@@ -897,15 +913,15 @@ const DashboardPage = () => {
     };
 
     return (
-        <div className="p-2 sm:p-4 md:p-8 bg-slate-100 dark:bg-slate-900 min-h-screen">
-            <div className="flex justify-center mb-6 space-x-1 md:space-x-2 bg-slate-200 dark:bg-slate-800 p-1 rounded-xl max-w-md mx-auto">
-                <button onClick={() => setActiveTab('simple')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'simple' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+        <div className="p-2 sm:p-4 md:p-8 bg-slate-100 dark:bg-slate-800 min-h-screen">
+            <div className="flex justify-center mb-6 space-x-1 md:space-x-2 bg-slate-200 dark:bg-slate-700/50 p-1 rounded-xl max-w-md mx-auto">
+                <button onClick={() => setActiveTab('simple')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'simple' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     {t('quickEditTab')}
                 </button>
-                <button onClick={() => setActiveTab('pro')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'pro' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+                <button onClick={() => setActiveTab('pro')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'pro' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     {t('creativeAdTab')}
                 </button>
-                <button onClick={() => setActiveTab('video')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'video' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+                <button onClick={() => setActiveTab('video')} className={`w-full px-4 py-2.5 rounded-lg font-semibold transition-colors duration-300 text-sm ${activeTab === 'video' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow' : 'bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                     {t('createVideoTab')}
                 </button>
             </div>
@@ -924,26 +940,25 @@ const AppHeader = () => {
     const { theme, toggleTheme } = useTheme();
     
     return (
-        <header className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-50">
+        <header className="bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-50 transition-colors">
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center space-x-3">
                         <LogoIcon />
                         <span className="font-bold text-xl text-slate-900 dark:text-slate-100">Nano Banana</span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            {theme === 'light' ? <MoonIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" /> : <SunIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />}
-                        </button>
-                         <button onClick={toggleLanguage} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-semibold text-slate-600 dark:text-slate-300">
-                            {language === 'vi' ? 'EN' : 'VI'}
-                        </button>
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                         <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('credits')}: <span className="font-bold text-yellow-500">{user?.credits ?? 0}</span></span>
                         {user?.role === 'admin' && (
-                            <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin';}} className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">{t('adminPanel')}</a>
+                            <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin';}} className="hidden sm:block text-sm font-medium text-indigo-600 hover:text-indigo-500">{t('adminPanel')}</a>
                         )}
-                        <span className="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">{user?.email}</span>
-                        <button onClick={logout} className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100">{t('logoutButton')}</button>
+                        <button onClick={toggleLanguage} className="p-2 rounded-md font-semibold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            {language === 'vi' ? 'EN' : 'VI'}
+                        </button>
+                        <button onClick={toggleTheme} className="p-2 rounded-md text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                            {theme === 'light' ? <MoonIcon className="w-4 h-4"/> : <SunIcon className="w-4 h-4"/>}
+                        </button>
+                        <button onClick={logout} className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">{t('logoutButton')}</button>
                     </div>
                 </div>
             </div>
@@ -985,21 +1000,17 @@ const App = () => {
 
     if (user.role === 'admin' && hash === '#admin') {
          return (
-             <div className="bg-slate-100 dark:bg-slate-900">
+             <div className="bg-slate-100 dark:bg-slate-800">
                 <AppHeader />
-                <main>
-                    <AdminPage />
-                </main>
+                <main><AdminPage /></main>
              </div>
          );
     }
     
     return (
-        <div className="bg-slate-100 dark:bg-slate-900">
+        <div className="bg-slate-100 dark:bg-slate-800">
              <AppHeader />
-             <main>
-                <DashboardPage />
-             </main>
+             <main><DashboardPage /></main>
         </div>
     );
 };
@@ -1007,11 +1018,11 @@ const App = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <LanguageProvider>
+    <AuthProvider>
         <ThemeProvider>
-            <AuthProvider>
+            <LanguageProvider>
                 <App />
-            </AuthProvider>
+            </LanguageProvider>
         </ThemeProvider>
-    </LanguageProvider>
+    </AuthProvider>
 );
