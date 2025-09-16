@@ -3,6 +3,8 @@ import { GoogleGenAI, Modality } from '@google/genai';
 import { verifyUser } from './utils/auth.js';
 import { db } from './utils/db.js';
 
+const AD_COST = 2;
+
 function buildPromptFromOptions(options, customPrompt) {
     let promptParts = [
         "Create a high-quality, professional, and creative advertisement photo in Vietnamese context.",
@@ -31,8 +33,8 @@ export default async function handler(req, res) {
      if (user.status !== 'approved') {
       return res.status(403).json({ message: `Your account status is: ${user.status}. Access denied.` });
     }
-    if (user.credits <= 0) {
-      return res.status(402).json({ message: 'Insufficient credits.' });
+    if (user.credits < AD_COST) {
+      return res.status(402).json({ message: `Insufficient credits. This action requires ${AD_COST} credits.` });
     }
   } catch (error) {
     return res.status(401).json({ message: error.message || 'Authentication failed.' });
@@ -71,7 +73,7 @@ export default async function handler(req, res) {
     const generatedImagePart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
 
     if (generatedImagePart) {
-      await db.updateUser(user.id, { credits: user.credits - 1 });
+      await db.updateUser(user.id, { credits: user.credits - AD_COST });
       res.status(200).json(generatedImagePart.inlineData);
     } else {
       const textPart = response.candidates?.[0]?.content?.parts?.find(p => p.text);
