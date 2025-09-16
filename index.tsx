@@ -14,7 +14,8 @@ const AuthProvider = ({ children }) => {
 
     const fetchUser = useCallback(async () => {
         try {
-            const res = await fetch('/api/auth/me');
+            // UPDATED: Fetch from the consolidated /api/auth endpoint
+            const res = await fetch('/api/auth');
             if (res.ok) {
                 const data = await res.json();
                 setUser(data.user);
@@ -39,7 +40,12 @@ const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        // UPDATED: Fetch from the consolidated /api/auth endpoint
+        await fetch('/api/auth', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'logout' }) 
+        });
         setUser(null);
         window.location.hash = '#login';
     };
@@ -104,10 +110,11 @@ const LoginPage = () => {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('/api/auth/login', {
+            // UPDATED: Fetch from the consolidated /api/auth endpoint
+            const res = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ action: 'login', email, password }),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -166,10 +173,11 @@ const SignupPage = () => {
         setError('');
         setMessage('');
         try {
-            const res = await fetch('/api/auth/signup', {
+            // UPDATED: Fetch from the consolidated /api/auth endpoint
+            const res = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ action: 'signup', email, password }),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -230,7 +238,8 @@ const AdminPage = () => {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/users');
+            // UPDATED: Fetch from the consolidated /api/admin endpoint
+            const res = await fetch('/api/admin');
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.message || 'Failed to fetch users');
@@ -250,7 +259,8 @@ const AdminPage = () => {
     
     const handleUpdateUser = async (userId, updates) => {
         try {
-            const res = await fetch('/api/admin/update-user', {
+            // UPDATED: Fetch from the consolidated /api/admin endpoint
+            const res = await fetch('/api/admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, ...updates }),
@@ -417,7 +427,6 @@ const DashboardPage = () => {
         const handleFileChange = async (file) => {
             try {
                 const imageData = await readFileAsBase64(file);
-                // FIX: Guard against non-object results before spreading to prevent type errors.
                 if (imageData && typeof imageData === 'object') {
                     setImage({ ...imageData, dataUrl: URL.createObjectURL(file) });
                     setGeneratedImage(null);
@@ -490,7 +499,6 @@ const DashboardPage = () => {
         const handleFileChange = async (file, type) => {
             try {
                 const imageData = await readFileAsBase64(file);
-                // FIX: Guard against non-object results before spreading to prevent type errors.
                 if (imageData && typeof imageData === 'object') {
                     const dataUrl = URL.createObjectURL(file);
                     const newImage = { ...imageData, dataUrl };
@@ -620,7 +628,6 @@ const DashboardPage = () => {
         const handleFileChange = async (file) => {
             try {
                 const imageData = await readFileAsBase64(file);
-                // FIX: Guard against non-object results before spreading to prevent type errors.
                 if (imageData && typeof imageData === 'object') {
                     setImage({ ...imageData, dataUrl: URL.createObjectURL(file) });
                 }
