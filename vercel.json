@@ -1,0 +1,17 @@
+
+{
+  "builds": [
+    {
+      "src": "vite.config.js",
+      "use": "@vercel/vite"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

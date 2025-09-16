@@ -1,11 +1,9 @@
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useRef, useCallback, useEffect, createContext, useContext } from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 
 // --- Authentication Context ---
 const AuthContext = createContext(null);

@@ -29,9 +29,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Prompt is required for video generation.' });
     }
     
-    const apiKey = process.env.VEO_API_KEY;
+    // FIX: The API key must be obtained exclusively from the environment variable `process.env.API_KEY`.
+    const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ message: "Server configuration error: VEO API key not found." });
+      // FIX: Updated error message to reflect the correct environment variable.
+      return res.status(500).json({ message: "Server configuration error: API key not found." });
     }
     const ai = new GoogleGenAI({ apiKey });
 

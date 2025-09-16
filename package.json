@@ -1,10 +1,11 @@
+
 {
   "name": "nano-banana-private",
   "version": "1.0.0",
   "type": "module",
   "description": "AI Photo and Video Editor with User Management",
   "scripts": {
-    "dev": "vite",
+    "dev": "vercel dev",
     "build": "vite build",
     "preview": "vite preview"
   },
