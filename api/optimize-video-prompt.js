@@ -3,6 +3,8 @@ import { GoogleGenAI } from '@google/genai';
 import { verifyUser } from './utils/auth.js';
 import { db } from './utils/db.js';
 
+const OPTIMIZE_COST = 0.1;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -15,8 +17,8 @@ export default async function handler(req, res) {
     if (user.status !== 'approved') {
       return res.status(403).json({ message: `Your account status is: ${user.status}. Access denied.` });
     }
-    if (user.credits <= 0) {
-      return res.status(402).json({ message: 'Insufficient credits.' });
+    if (user.credits < OPTIMIZE_COST) {
+      return res.status(402).json({ message: `Insufficient credits. This action requires ${OPTIMIZE_COST} credits.` });
     }
   } catch (error) {
     return res.status(401).json({ message: error.message || 'Authentication failed.' });
@@ -28,7 +30,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Prompt is required.' });
     }
     
-    const apiKey = process.env.API_KEY; // Optimization can use the general key
+    const apiKey = process.env.API_KEY;
     if (!apiKey) {
       return res.status(500).json({ message: "Server configuration error: API key not found." });
     }
@@ -48,8 +50,7 @@ export default async function handler(req, res) {
     const optimizedPrompt = response.text.trim();
 
     if (optimizedPrompt) {
-        // Optimization costs 0.1 credits
-        await db.updateUser(user.id, { credits: user.credits - 0.1 });
+        await db.updateUser(user.id, { credits: user.credits - OPTIMIZE_COST });
         res.status(200).json({ optimizedPrompt });
     } else {
         res.status(500).json({ message: "Could not optimize prompt." });
