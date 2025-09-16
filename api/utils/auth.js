@@ -22,6 +22,8 @@ export async function verifyUser(req) {
         // The findUserById function in db.js already removes the password
         return user;
     } catch (error) {
-        throw new Error('Invalid token.');
+        // The original "Invalid token." message is unhelpful. 
+        // This new message gives the user a clear action to take.
+        throw new Error('Your session has expired. Please log in again.');
     }
 }
